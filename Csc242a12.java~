@@ -1,0 +1,128 @@
+import java.io.*;
+import java.util.*;
+import javax.swing.*;
+
+class Hierarchical {
+  
+  static Map map;
+  static JFrame frame;
+  
+  public static void main (String [] args) throws IOException{
+    
+    File file;
+    double INF=999999;
+    double x, y, minx=INF, miny=INF, maxx=0, maxy=0, tempDist, minDist=INF, absMinDist=INF;
+    int /*n=0,*/ i,j,k, index=0,absIndexJ=0,absIndexI=0;
+    ArrayList<Coordinates> coords = new ArrayList<Coordinates>();
+    LinkedList<Coordinates> tree = new LinkedList<Coordinates>();
+    boolean flag = false;
+    
+    if (args.length == 0) {
+      file = new File("B.txt");
+    }
+    else {
+      file = new File(args[0]);
+    }
+    
+    if(!file.exists()){
+      System.out.println("Error, file not found.");
+      System.exit(1);
+    }
+    
+    Scanner scan = new Scanner(file);
+    
+    while(scan.hasNext()){
+      x = Double.parseDouble(scan.next());
+      y = Double.parseDouble(scan.next());
+      
+      //n++;
+      
+      if(x < minx)
+        minx = x;
+      if(y < miny)
+        miny = y;
+      if(x > maxx)
+        maxx = x;
+      if(y > maxy)
+        maxy = y;
+      
+      coords.add(new Coordinates(x,y,0)); //0 == false 1 == true
+    }
+    
+    //change condition
+    while(!flag){
+      flag = true;
+      absMinDist=INF;
+      
+      for(i=0; i < coords.size(); i++){
+        
+        minDist = INF;
+        
+        for(j=0; j < coords.size();j++){
+          
+          if(coords.get(i).c == 0 || coords.get(j).c == 0){ //if they're both equal to one they're part of the same cluster
+            
+            tempDist = Math.sqrt(Math.pow((coords.get(i).x-coords.get(j).x) ,2) + Math.pow((coords.get(i).y-coords.get(j).y) ,2));
+            
+            //Shortest Distance, excluding same cluster. Setting element to its new cluster
+            if(tempDist < minDist){
+              minDist = tempDist;
+              index = j;
+              flag = false;
+            }
+          }
+        }
+        
+        if(minDist < absMinDist){
+          absMinDist = minDist;
+          absIndexJ = index;
+          absIndexI = i;
+        }
+      }
+      
+      //Now we know the closest element from i and j
+      //Next step is to build a tree
+      buildTree(absIndexI,absIndexJ,coords, tree);
+    }
+    
+    System.out.println("Loading Display...");
+    
+    //Actually Let's build a list first
+    ArrayList<Coords> printThis = getready(coords, tree);
+    map = new Map(printThis,minx,maxx,miny,maxy);
+    draw();
+  }
+  
+  public static void buildTree(int i, int j, ArrayList<Coordinates> coords, LinkedList<Coordinates> tree){
+    
+    //telling the other part of the prgram that these coordinates are members of a cluster
+    coords.get(i).c = 1; 
+    coords.get(j).c = 1;
+    
+    Coordinates tempI = coords.get(i);
+    Coordinates tempJ = coords.get(j);
+        
+    while(tempI.parent != null){
+      tempI = tempI.parent; 
+    }
+    
+    while(tempJ.parent != null){
+      tempJ = tempJ.parent; 
+    }
+    
+    tree.add(new Coordinates(tempI, tempJ));
+    
+    coords.get(j).parent = tree.getLast();
+    coords.get(i).parent = tree.getLast();
+    
+  }
+  
+  public static void draw(){
+    frame = new JFrame();
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.add(map);
+    frame.setSize(800,800);
+    frame.setVisible(true);
+  }
+  
+}
