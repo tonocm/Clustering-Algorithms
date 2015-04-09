@@ -1,0 +1,6 @@
+class Element{
+  
+ public double id;
+ public ArrayList<double> set;
+  
+}
